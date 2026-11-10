@@ -1,28 +1,61 @@
+import express from "express";
 import amqp from "amqplib";
+import { randomUUID } from "node:crypto";
 
+const PORT = 3000;
 const RABBITMQ_URL = "amqp://guest:guest@localhost:5672";
+const QUEUE_NAME = "orders_queue";
 
-async function main() {
-  try {
-    console.log("🔌 Connecting to RabbitMQ...");
-    const connection = await amqp.connect(RABBITMQ_URL);
-    const channel = await connection.createChannel();
+let channel: amqp.Channel;
 
-    const queue = "test_queue";
-    await channel.assertQueue(queue, { durable: false });
+async function initRabbitMQ() {
+  console.log("🔌 Connecting API to RabbitMQ...");
+  const connection = await amqp.connect(RABBITMQ_URL);
+  channel = await connection.createChannel();
 
-    const message = "Hello from Node.js + TypeScript!";
-    channel.sendToQueue(queue, Buffer.from(message));
-    console.log(`📥 Sent message to '${queue}': "${message}"`);
-
-    setTimeout(async () => {
-      await channel.close();
-      await connection.close();
-      console.log("👋 Disconnected cleanly.");
-    }, 500);
-  } catch (error) {
-    console.error("❌ RabbitMQ connection failed:", error);
-  }
+  // Ensure the queue exists before sending messages to it
+  await channel.assertQueue(QUEUE_NAME, { durable: true });
+  console.log(`✅ RabbitMQ ready. Target queue: '${QUEUE_NAME}'`);
 }
 
-main();
+const app = express();
+app.use(express.json());
+
+app.post("/checkout", (req, res) => {
+  const { userId, productId } = req.body;
+
+  if (!userId || !productId) {
+    return res.status(400).json({ error: "Missing userId or productId" });
+  }
+
+  // 1. Generate a unique order tracking ID
+  const orderId = randomUUID();
+
+  // 2. Build the event payload
+  const orderPayload = {
+    orderId,
+    userId,
+    productId,
+    createdAt: new Date().toISOString(),
+  };
+
+  // 3. Publish to RabbitMQ persistent queue
+  channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(orderPayload)), { persistent: true });
+
+  // 4. Return HTTP 202 Accepted immediately to the client
+  return res.status(202).json({
+    message: "Order request received and queued",
+    orderId,
+  });
+});
+
+async function start() {
+  await initRabbitMQ();
+  app.listen(PORT, () => {
+    console.log(`🚀 API Server listening at http://localhost:${PORT}`);
+  });
+}
+
+start().catch((err) => {
+  console.error("❌ Failed to start API server:", err);
+});
