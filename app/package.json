@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "db:init": "tsx ./src/db/init.ts",
     "dev:api": "tsx watch ./src/api.ts",
     "dev:worker": "tsx watch ./src/worker.ts"
   },
