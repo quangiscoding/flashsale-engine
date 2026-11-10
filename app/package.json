@@ -6,7 +6,8 @@
   "scripts": {
     "db:init": "tsx ./src/db/init.ts",
     "dev:api": "tsx watch ./src/api.ts",
-    "dev:worker": "tsx watch ./src/worker.ts"
+    "dev:worker": "tsx watch ./src/worker.ts",
+    "test:spike": "tsx ./src/scripts/test-spike.ts"
   },
   "keywords": [],
   "author": "",
