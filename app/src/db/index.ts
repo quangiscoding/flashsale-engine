@@ -1,6 +1,6 @@
 import pg from "pg";
 
-const POSTGRES_URL = process.env.DATABASE_URL || "postgresql://postgres:postgrespassword@localhost:5432/flashsale";
+const POSTGRES_URL = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/flashsale";
 
 export const db = new pg.Pool({
   connectionString: POSTGRES_URL,
