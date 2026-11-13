@@ -7,6 +7,8 @@
     "db:init": "tsx ./src/db/init.ts",
     "dev:api": "tsx watch ./src/api.ts",
     "dev:worker": "tsx watch ./src/worker.ts",
+    "db:migrate": "dotenv -- node-pg-migrate up -m src/db/migrations",
+    "db:seed": "tsx --env-file=.env ./src/db/seed.ts",
     "test:spike": "tsx ./src/scripts/test-spike.ts"
   },
   "keywords": [],
@@ -31,6 +33,8 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
+    "dotenv-cli": "^11.1.0",
+    "node-pg-migrate": "^9.0.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
